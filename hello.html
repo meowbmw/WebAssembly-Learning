@@ -1,0 +1,32 @@
+<!doctype html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>WASM memory test</title>
+</head>
+
+<body>
+    <script>
+        const memory = new WebAssembly.Memory({
+            initial: 1
+        });
+        WebAssembly.instantiateStreaming(fetch("memcpy.wasm"), {
+            js: { mem: memory },
+        }).then((obj) => {
+            const buffer = new DataView(memory.buffer); // buffer= array[65536]
+            const srcPtr = 0;
+            const length = 6;
+            for (let i = 0; i < length; ++i) {
+                buffer.setInt32(srcPtr + i * 4, i, true);
+            }
+            const dstPtr = 200;
+            obj.instance.exports.memcpy(0, 200, length * 4); //we write byte by byte, and one int = 4 bytes
+            for (let i = 0; i < length; ++i) {
+                console.log(buffer.getInt32(dstPtr + i * 4, true))
+            }
+        });
+    </script>
+</body>
+</html>
